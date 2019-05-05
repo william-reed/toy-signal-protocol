@@ -1,5 +1,7 @@
 package dev.williamreed.signal
 
+import kotlinx.serialization.json.Json
+
 /**
  * Server
  *
@@ -12,29 +14,32 @@ class Server {
     /**
      * Register a device with the server
      *
-     * @param bundle [SerializablePreKeysBundle] of keys and other info
+     * @param bundleJson [SerializablePreKeysBundle] json version of the bundle
      */
-    fun register(bundle: SerializablePreKeysBundle) {
+    fun register(bundleJson: String) {
+        val bundle = Json.parse(SerializablePreKeysBundle.serializer(), bundleJson)
         devices[bundle.deviceId] = bundle
     }
 
     /**
      * Get a bundle for the given device destination. Removes the pre key from the pool for the device
+     *
+     * @return json version of the bundle
      */
-    fun getDeviceBundle(deviceId: Int): SerializablePreKeyBundle {
+    fun getDeviceBundle(deviceId: Int): String {
         val preKeysBundle = devices[deviceId] ?: error("device id `$deviceId` does not exist.")
         val nextPreKey = preKeysBundle.publicPreKeys.first()
 
         // remove this key
         devices[deviceId] = preKeysBundle.copy(publicPreKeys = preKeysBundle.publicPreKeys.rest())
 
-        return SerializablePreKeyBundle(
+        return Json.stringify(SerializablePreKeyBundle.serializer(), SerializablePreKeyBundle(
             preKeysBundle.localRegistrationId,
             deviceId,
             nextPreKey,
             preKeysBundle.signedPublicPreKey,
             preKeysBundle.signedPreKeySignature,
             preKeysBundle.identityPublicKey
-        )
+        ))
     }
 }
