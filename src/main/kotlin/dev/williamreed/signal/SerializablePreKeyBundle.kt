@@ -46,13 +46,13 @@ data class SerializablePreKeyBundle(
     val signedPreKeySignature: String,
     val identityPublicKey: String
 ) {
-    fun toPreKeyBundle() {
+    fun toPreKeyBundle(): PreKeyBundle {
         val decoder = Base64.getDecoder()
 
         val preKeyPublic = IdentityKey(decoder.decode(publicPreKey.second), 0).publicKey
         val signedPreKeyPublic = IdentityKey(decoder.decode(signedPublicPreKey.second), 0)
 
-        PreKeyBundle(
+        return PreKeyBundle(
             localRegistrationId,
             deviceId,
             publicPreKey.first,

@@ -4,7 +4,6 @@ import org.whispersystems.libsignal.SignalProtocolAddress
 import org.whispersystems.libsignal.state.PreKeyBundle
 import org.whispersystems.libsignal.state.PreKeyRecord
 import org.whispersystems.libsignal.state.SignalProtocolStore
-import org.whispersystems.libsignal.state.SignedPreKeyRecord
 import org.whispersystems.libsignal.state.impl.InMemorySignalProtocolStore
 import org.whispersystems.libsignal.util.KeyHelper
 import java.util.*
@@ -14,18 +13,17 @@ import java.util.*
  *
  * A client entity with its own keys
  */
-class Client(name: String, private val deviceId: Int) {
+class Client(val name: String, val deviceId: Int) {
     val store: SignalProtocolStore
     val address = SignalProtocolAddress(name, deviceId)
-    private val preKeys = ArrayDeque<PreKeyRecord>()
     private var preKeyId = 0
+    private val signedPublicPreKey: Pair<Int, String>
 
     init {
         this.store = genIdentity()
 
-        // TODO: send these to the server
-        val publicKeys = genPreKeys()
-        val signedPublicKey = genSignedPreKey()
+        // only one of these will be used
+        signedPublicPreKey = genSignedPreKey()
     }
 
     /**
@@ -39,53 +37,44 @@ class Client(name: String, private val deviceId: Int) {
 
     /**
      * Generate and store signed pre key
-     * @return the Base64 encoded string of the public key
+     * @return a pair of key id and Base64 encoded string of the public key
      */
-    private fun genSignedPreKey(): String {
+    private fun genSignedPreKey(): Pair<Int, String> {
         val signedPreKey = KeyHelper.generateSignedPreKey(store.identityKeyPair, SIGNED_PRE_KEY_ID)
         // store signed keys
         store.storeSignedPreKey(signedPreKey.id, signedPreKey)
 
-        return String(Base64.getEncoder().encode(signedPreKey.keyPair.publicKey.serialize()))
+        return signedPreKey.id to String(Base64.getEncoder().encode(signedPreKey.keyPair.publicKey.serialize()))
     }
 
     /**
      * Generate and store pre keys
-     * @return a list of the Base64 encoded string of the public keys
+     * @return a list of pair of key id and the Base64 encoded string of the public keys
      */
-    private fun genPreKeys(): List<String> {
+    private fun genPreKeys(): List<Pair<Int, String>> {
         val preKeys = KeyHelper.generatePreKeys(preKeyId, PRE_KEY_COUNT)
         // store pre keys
         preKeys.forEach {
             store.storePreKey(it.id, it)
-            this.preKeys.push(it)
         }
         preKeyId += PRE_KEY_COUNT
 
-        return preKeys.map { String(Base64.getEncoder().encode(it.keyPair.publicKey.serialize())) }
+        return preKeys.map { it.id to String(Base64.getEncoder().encode(it.keyPair.publicKey.serialize())) }
     }
 
     /**
-     * Get the next pre key bundle to use
+     * Get the next pre keys bundle. Generates a new batch of unsigned pre keys for each of these
      */
-    fun nextPreKey(): PreKeyBundle {
-        if (preKeys.isEmpty())
-            genPreKeys()
-
-        val preKey = preKeys.pop()
-        val signedPreKey = store.loadSignedPreKey(SIGNED_PRE_KEY_ID)
-
-        return PreKeyBundle(
+    fun nextPreKeysBundle() =
+        SerializablePreKeysBundle(
             store.localRegistrationId,
             deviceId,
-            preKey.id,
-            preKey.keyPair.publicKey,
-            SIGNED_PRE_KEY_ID,
-            signedPreKey.keyPair.publicKey,
-            signedPreKey.signature,
-            store.identityKeyPair.publicKey
+            genPreKeys(),
+            signedPublicPreKey,
+            String(Base64.getEncoder().encode(store.loadSignedPreKey(SIGNED_PRE_KEY_ID).signature)),
+            String(Base64.getEncoder().encode(store.identityKeyPair.publicKey.serialize()))
         )
-    }
+
 
     companion object {
         const val PRE_KEY_COUNT = 100
