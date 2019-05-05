@@ -4,6 +4,7 @@ import org.whispersystems.libsignal.SignalProtocolAddress
 import org.whispersystems.libsignal.state.PreKeyBundle
 import org.whispersystems.libsignal.state.PreKeyRecord
 import org.whispersystems.libsignal.state.SignalProtocolStore
+import org.whispersystems.libsignal.state.SignedPreKeyRecord
 import org.whispersystems.libsignal.state.impl.InMemorySignalProtocolStore
 import org.whispersystems.libsignal.util.KeyHelper
 import java.util.*
@@ -23,8 +24,8 @@ class Client(name: String, private val deviceId: Int) {
         this.store = genIdentity()
 
         // TODO: send these to the server
-        val preKeys = genPreKeys()
-        val signedPreKey = genSignedPreKey()
+        val publicKeys = genPreKeys()
+        val signedPublicKey = genSignedPreKey()
     }
 
     /**
@@ -38,19 +39,19 @@ class Client(name: String, private val deviceId: Int) {
 
     /**
      * Generate and store signed pre key
-     * @return the Base64 encoded string of the key
+     * @return the Base64 encoded string of the public key
      */
     private fun genSignedPreKey(): String {
         val signedPreKey = KeyHelper.generateSignedPreKey(store.identityKeyPair, SIGNED_PRE_KEY_ID)
         // store signed keys
         store.storeSignedPreKey(signedPreKey.id, signedPreKey)
 
-        return String(Base64.getEncoder().encode(signedPreKey.serialize()))
+        return String(Base64.getEncoder().encode(signedPreKey.keyPair.publicKey.serialize()))
     }
 
     /**
      * Generate and store pre keys
-     * @return a list of the Base64 encoded string of the keys
+     * @return a list of the Base64 encoded string of the public keys
      */
     private fun genPreKeys(): List<String> {
         val preKeys = KeyHelper.generatePreKeys(preKeyId, PRE_KEY_COUNT)
@@ -61,7 +62,7 @@ class Client(name: String, private val deviceId: Int) {
         }
         preKeyId += PRE_KEY_COUNT
 
-        return preKeys.map { String(Base64.getEncoder().encode(it.serialize())) }
+        return preKeys.map { String(Base64.getEncoder().encode(it.keyPair.publicKey.serialize())) }
     }
 
     /**
@@ -88,7 +89,7 @@ class Client(name: String, private val deviceId: Int) {
 
     companion object {
         const val PRE_KEY_COUNT = 100
-        // TODO: we only ever need one pre key right?
+        // TODO: we only ever need one signed pre key right?
         const val SIGNED_PRE_KEY_ID = 123456
     }
 }
