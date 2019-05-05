@@ -20,34 +20,39 @@ class Client(name: String, private val deviceId: Int) {
     private var preKeyId = 0
 
     init {
-        this.store = generateIdentity()
-        generatePreKeyIdentity()
+        this.store = genIdentity()
+
+        // TODO: send these to the server
+        val preKeys = genPreKeys()
+        val signedPreKey = genSignedPreKey()
     }
 
     /**
      * Generate the identity and create a store for it
      */
-    private fun generateIdentity() =
+    private fun genIdentity() =
         InMemorySignalProtocolStore(
             KeyHelper.generateIdentityKeyPair(),
             KeyHelper.generateRegistrationId(false)
         )
 
     /**
-     * Generate and store pre key
+     * Generate and store signed pre key
+     * @return the Base64 encoded string of the key
      */
-    private fun generatePreKeyIdentity() {
+    private fun genSignedPreKey(): String {
         val signedPreKey = KeyHelper.generateSignedPreKey(store.identityKeyPair, SIGNED_PRE_KEY_ID)
-        generatePreKeys()
-
         // store signed keys
         store.storeSignedPreKey(signedPreKey.id, signedPreKey)
+
+        return String(Base64.getEncoder().encode(signedPreKey.serialize()))
     }
 
     /**
-     * Generate pre keys
+     * Generate and store pre keys
+     * @return a list of the Base64 encoded string of the keys
      */
-    private fun generatePreKeys() {
+    private fun genPreKeys(): List<String> {
         val preKeys = KeyHelper.generatePreKeys(preKeyId, PRE_KEY_COUNT)
         // store pre keys
         preKeys.forEach {
@@ -55,6 +60,8 @@ class Client(name: String, private val deviceId: Int) {
             this.preKeys.push(it)
         }
         preKeyId += PRE_KEY_COUNT
+
+        return preKeys.map { String(Base64.getEncoder().encode(it.serialize())) }
     }
 
     /**
@@ -62,7 +69,7 @@ class Client(name: String, private val deviceId: Int) {
      */
     fun nextPreKey(): PreKeyBundle {
         if (preKeys.isEmpty())
-            generatePreKeys()
+            genPreKeys()
 
         val preKey = preKeys.pop()
         val signedPreKey = store.loadSignedPreKey(SIGNED_PRE_KEY_ID)
