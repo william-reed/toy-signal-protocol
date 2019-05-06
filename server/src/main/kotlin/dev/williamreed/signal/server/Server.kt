@@ -72,6 +72,7 @@ object Server {
         post("/register") { req, res ->
             try {
                 register(req.body())
+                ""
             } catch (e: JsonException) {
                 res.status(400)
                 e.message
