@@ -1,4 +1,4 @@
-package dev.williamreed.signal
+package dev.williamreed.signal.client
 
 import org.whispersystems.libsignal.SessionBuilder
 import org.whispersystems.libsignal.SessionCipher

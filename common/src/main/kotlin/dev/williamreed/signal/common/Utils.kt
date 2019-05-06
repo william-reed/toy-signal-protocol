@@ -1,4 +1,4 @@
-package dev.williamreed.signal
+package dev.williamreed.signal.common
 
 /**
  * All but the first

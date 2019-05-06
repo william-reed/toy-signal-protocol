@@ -1,0 +1,15 @@
+buildscript {
+    repositories { jcenter() }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
+    }
+}
+
+apply plugin: 'kotlinx-serialization'
+
+dependencies {
+    api "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.11.0"
+    // signal protocol for encryption
+    api 'org.whispersystems:signal-protocol-java:2.7.1'
+}

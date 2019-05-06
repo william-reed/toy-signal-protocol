@@ -1,21 +1,33 @@
-package dev.williamreed.signal
+package dev.williamreed.signal.server
 
+import dev.williamreed.signal.common.SerializablePreKeyBundle
+import dev.williamreed.signal.common.SerializablePreKeysBundle
+import dev.williamreed.signal.common.rest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonException
 import spark.Spark.get
 import spark.Spark.post
 
+fun main() {
+    Server.start()
+}
+
 /**
  * Server
  *
- * Simulating the job of a server holding public key information from various clients
+ * Server holding public key information from various clients
  */
 object Server {
+
+    // TODO: need to ensure thread safety on this map
     // map of device ids and bundle
     private val devices = mutableMapOf<Int, SerializablePreKeysBundle>()
     private const val DEVICE_ID = "deviceId"
 
-    init {
+    /**
+     * Start the server
+     */
+    fun start() {
         setupWebServer()
     }
 

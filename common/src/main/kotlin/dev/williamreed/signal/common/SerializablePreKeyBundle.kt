@@ -1,4 +1,4 @@
-package dev.williamreed.signal
+package dev.williamreed.signal.common
 
 import kotlinx.serialization.Serializable
 import org.whispersystems.libsignal.IdentityKey

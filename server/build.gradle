@@ -1,0 +1,7 @@
+dependencies {
+    // spark java for a a web server
+    implementation 'com.sparkjava:spark-core:2.8.0'
+    // logger for spark java
+    implementation 'org.slf4j:slf4j-simple:1.7.26'
+    implementation project(':common')
+}

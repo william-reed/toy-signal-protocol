@@ -1,8 +1,7 @@
-package dev.williamreed.signal
+package dev.williamreed.signal.client
 
+import dev.williamreed.signal.common.SerializablePreKeysBundle
 import org.whispersystems.libsignal.SignalProtocolAddress
-import org.whispersystems.libsignal.state.PreKeyBundle
-import org.whispersystems.libsignal.state.PreKeyRecord
 import org.whispersystems.libsignal.state.SignalProtocolStore
 import org.whispersystems.libsignal.state.impl.InMemorySignalProtocolStore
 import org.whispersystems.libsignal.util.KeyHelper
